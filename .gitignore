@@ -40,3 +40,6 @@
 *.out
 *.app
 main
+
+# core
+core
