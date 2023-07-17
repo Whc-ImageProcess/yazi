@@ -37,6 +37,7 @@ bool Socket::bind(const string &ip, int port)
     }
     sockaddr.sin_port = htons(port);
 
+    // ::bind 表示对系统API的调用
     if (::bind(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
     {
         error("socket bind error: errno=%d errstr=%s", errno, strerror(errno));
@@ -109,6 +110,7 @@ bool Socket::set_non_blocking()
         error("Socket::set_non_blocking(F_GETFL, O_NONBLOCK): errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
+    // 这里应该保留原来文件的 IO 标志位，为还原 IO 标志
     flags |= O_NONBLOCK;
     if (fcntl(m_sockfd, F_SETFL, flags) < 0)
     {
@@ -121,6 +123,11 @@ bool Socket::set_non_blocking()
 bool Socket::set_send_buffer(int size)
 {
     int buff_size = size;
+    // 设置套接字的发送缓冲区大小
+    // SOL_SOCKET 是一个常量，用于表示要设置的选项级别。在这里，SOL_SOCKET 表示套接字级别的选项。
+    // SO_SNDBUF 是一个套接字选项常量，用于表示发送缓冲区的大小。
+    // 通过调整发送缓冲区的大小，可以对发送数据的性能和吞吐量进行优化。较大的发送缓冲区可以容纳更多的数据，
+    // 减少频繁的发送操作，从而提高发送效率。
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_SNDBUF, &buff_size, sizeof(buff_size)) < 0)
     {
         error("socket set send buffer error: errno=%d errstr=%s", errno, strerror(errno));
@@ -162,6 +169,8 @@ bool Socket::set_linger(bool active, int seconds)
 bool Socket::set_keep_alive()
 {
     int flag = 1;
+    // 当启用 Keep-Alive 选项后，操作系统会定期发送一些探测数据给对方，
+    // 并等待对方的响应。如果对方没有及时响应，那么连接可能已经断开。
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_KEEPALIVE, &flag, sizeof(flag)) < 0)
     {
         error("socket set sock keep alive error: errno=%d errstr=%s", errno, strerror(errno));

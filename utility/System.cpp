@@ -74,6 +74,8 @@ string System::get_root_path()
     }
     char path[1024];
     memset(path, 0, 1024);
+    // 代码调用readlink()函数读取/proc/self/exe符号链接文件，
+    // 并将结果存储在path数组中。/proc/self/exe是一个特殊文件，它指向当前正在执行的可执行文件
     int cnt = readlink("/proc/self/exe", path, 1024);
     if (cnt < 0 || cnt >= 1024)
     {

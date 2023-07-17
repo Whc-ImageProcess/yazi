@@ -62,6 +62,7 @@ void SocketHandler::handle(int max_connections, int wait_time)
     m_epoll = new EventPoller(false);
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR));
+    // 这里一次性创建最大数量的连接对象
     m_sockpool.init(max_connections);
 
     debug("epoll wait time: %dms", wait_time);
@@ -87,6 +88,7 @@ void SocketHandler::handle(int max_connections, int wait_time)
                 }
                 socket->m_sockfd = soctfd;
                 socket->set_non_blocking();
+                // 将客户端已经创建的连接放到epoll监听池里面
                 attach(socket);
             }
             else
